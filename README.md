@@ -72,6 +72,7 @@ $this->widget('PcStarRankWidget', array('modelId' => $model->id, 'modelClassName
 
 The following notes are meant for developers:
 * DB schema is ignorant to actual rating mechanism used. There are scores, min, max but there's no 'stars' mentioned anywhere. Feel free to change actual rating mechanism (typically some JS trickery). I don't have time at the moment to document the interface between the frontend and the backend parts of the widget/module.
+* The code itself is full of comments that document my decisions/contemplations/etc. I use them to track my thoughts/decisions later on. You're invited to read the code to learn more and see more. In short: *"Use the force! - read the source!"* :-)
 
 ## Room for development
 
