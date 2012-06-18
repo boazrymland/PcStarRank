@@ -13,6 +13,13 @@ This module uses internally Yii's built in CStarRating to render the actual rati
 
 * I've built and tested this extension on the latest version of Yii at the time of writing, v1.1.10
 * This extension uses the base active record class provided by [PcBaseArModel extension](http://www.yiiframework.com/extension/pcbasearmodel/) and thus depends on it. Please refer to the link given for documentation on that extension.
+* There are several more dependancies that are detailed in the section titled "Dependencies/Decapsulation considerations" below. Among which are (in a nutshell):
+  * This module depends on a table for users named *users* with a primary key column named *id*.
+  * By default, the included widget **depends** on Yii's RBAC system to be working and expects a permission named "star rank content". This can be overriden however. It is covered in greater depth below... .
+
+# Limitations
+
+* This extension was **not** designed for voting by the guest user.
 
 # Installation
 
@@ -46,18 +53,20 @@ This module uses internally Yii's built in CStarRating to render the actual rati
 
 The following notes are meant for developers:
 * DB schema is ignorant to actual rating mechanism used. There are scores, min, max but there's no 'stars' mentioned anywhere. Feel free to change actual rating mechanism (typically some JS trickery). I don't have time at the moment to document the interface between the frontend and the backend parts of the widget/module.
-* 
 
 ## Room for development
 
-Further room for development, and its only notes I've quickly pulled out. Feel free to submit more feedback on this.
+Further room for development, and its only notes I've quickly pulled out. Feel free to submit more...:
 
-* Damn, did I really left cache un-implemented? It appears so :-( . Time, I lack time... . Caching here is natural (but where *isn't* it? :).                                                                                                                                  * Develop the cronjob mentioned in the 'TODOs' section.
+* Damn, did I really left cache un-implemented? It appears so :-( . Time, I lack time... . Caching here is natural (but where isnt it?...).
+* Develop the cronjob mentioned in the 'TODOs' section.
+* Extensively check possible security issues. For a start:
+  * Not a big deal (IMHO): when the widget is rendered the content class name is given in the html so client side can know class names of models in our system.
+  * Continuing last bullet, rogue users can try and mess with the system by submitting ranks for models that the developer didn't intend from the start to be rank-able, like "User" class. This is pretty harmful as indeed ranking_votes and rankings records will be created but still. Consider having some configuration parameter to the module (main.php) that lists all 'rankable' class names in an array. This requires manitaining but solves the problem just described.
 
 # Dependencies/Decapsulation considerations
 
-* This extension expects *users* table with 'id' as its primary key. It is used to impose some constraints in the DB level and to link PK-FK between record votes in *ranking_votes* table to the actual users in the *users* table
-* This extension was **not** designed for voting by guest user.
+* This extension expects *users* table with *id* as its primary key. It is used to impose some constraints in the DB level and to link PK-FK between record votes in *ranking_votes* table to the actual users in the *users* table
 * Ranking and RankingVote classes both extend *PcBaseArModel* and not CActiveRecord (since we use its optimistic locking feature). Therefore, this extension depends on the [PcBaseArModel](http://www.yiiframework.com/extension/pcbasearmodel/) extension.
 * The included widget supports min and max number of stars per model class. A default of 1 and 5, respectively, is defined in this widget. To define other values be sure to have two constant in the model class named STARRANK_MIN_RANK and STARRANK_MAX_RANK. Both should be defined or none.
 * The included widget supports descriptive text on each star in the widget, to be supplied by the model class. If this is desired, define a static method in the model class named *getStarRankTitles()*. This method should return an array with numerical keys and values that should be the titles for the stars. Make sure that the number of elements returned by this method is the same as your model class constant STARRANK_MAX_STARS... .
