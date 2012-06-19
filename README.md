@@ -7,6 +7,9 @@ Yii extension (module) for 'star ranking' content on a Yii based webapp/site
 
 * This module provides a plug & play style component that is 'attachable' to probably any content on your Yii site that has a separate DB table for it (or multiple tables). Using it, your content can be ranked by users who have permission to rank content. 
 * This module should support multiple rendered copies of it on the same page, for several rank-able content items (I didn't test it so far but designed it for this use case and highly likely that this works).
+* The module will automatically update the ranked record in its own DB table. This is useful for sorting records (e.g., "articles") based on their average rank.
+* Rate voting is allowed only once and once voted the UI becomes readonly (server side has its own decision making on this to prevent forging attempt from hampered client side).
+* All printed messages are translatable. Make sure to configure your i18n setup of Yii to have this in effect. 
 
 This module uses internally Yii's built in CStarRating to render the actual rating UI but this UI can be replaced with whatever you prefer.
 
@@ -14,7 +17,37 @@ This module uses internally Yii's built in CStarRating to render the actual rati
 
 * I've built and tested this extension on the latest version of Yii at the time of writing, v1.1.10
 * This extension uses the base active record class provided by [PcBaseArModel extension](http://www.yiiframework.com/extension/pcbasearmodel/) and thus depends on it. Please refer to the link given for documentation on that extension.
-* There are several more dependancies that are detailed in the section titled "Dependencies/Decapsulation considerations" below. Among which are (in a nutshell):
+* Since this extension updates the record being ranked, it requires some updates to the DB table and accordingly in the AR class. The following columns should be added to the DB table (MySQL syntax given):
+~~~
+[sql]
+`average_rank` decimal(2,1) DEFAULT NULL
+~~~
+* Continuing previous item, add matching definitions into the relevant AR class. Example:
+~~~
+[php]
+class MyClass extends PcBaseArModel {
+/*
+* ...
+* @property float $average_rank
+* ...
+*/
+
+  public function rules() {
+    return array (
+      //...
+      array('average_rank', 'numerical', 'min' => 0.0, 'max' => 9.9),
+      //...
+    );
+  }
+
+  public function attributeLabels() {
+    return array(
+      //...
+      'average_rank' => Yii::t("MyModule.forms", 'Average Rank'),
+    );
+  }
+~~~
+* There are several more dependancies that are detailed in the section titled "Dependencies considerations" below. Among which are (in a nutshell):
   * This module depends on a table for users named *users* with a primary key column named *id*.
   * By default, the included widget **depends** on Yii's RBAC system to be working and expects a permission named "star rank content". This can be overriden however. It is covered in greater depth below... .
 
@@ -45,6 +78,7 @@ This module uses internally Yii's built in CStarRating to render the actual rati
     'application.modules.PcStarRank.*',
     'application.modules.PcStarRank.models.*',
     'application.modules.PcStarRank.controllers.*',
+    'application.modules.PcStarRank.components.*',
     'application.modules.PcStarRank.extensions.PcStarRankWidget.*',
     //...
     ),
@@ -57,6 +91,8 @@ This module uses internally Yii's built in CStarRating to render the actual rati
     //...
   ),
 ```
+
+* When a guest user tries to vote he gets an error message asking him to register first. The URL for registration is offered to him at this stage, and its taken from _Yii::app()->params['registrationRoute']_ so be sure to give a value to this parameter.
 
 # Usage
 
@@ -88,7 +124,9 @@ Further room for development, and its only notes I've quickly pulled out. Feel f
 
 * Have some cronjob to clean dangling rankings. We cannot do this (easily at least) via a DB constraint since this table references multiple other, unknown and dynamic tables (via model_class column which is a string). Don't worry about ranking_votes - that one DOES have a constraint to delete records that are being deleted on rankings (and rankings to ranking_votes is one to many. There will always be a rankings record for a ranking_votes record).
                                                                                                                                                                                                                                                           
-# Resources
+Change Log
+------------------
+19 June 2012: **v1.0**: Enabled updating of average rank in the table holding containing the record being ranked. This is useful for sorting of record based on their average rank. Be sure to read instructions above as there are updates to to the installation process that needs to be carried out.
 
 * I've used [this forum thread](http://www.yiiframework.com/forum/index.php/topic/29851-complete-guide-for-multiple-cstarratings-on-same-page/) for information/tips during development.
 
