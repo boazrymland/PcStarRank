@@ -6,7 +6,7 @@
 class PcStarRankWidget extends CWidget {
 	const STAR_RANK_AJAX_NOTIFIER = 'StarRankAjaxSubmission';
 	const DEFAULT_MIN_RANK = 1;
-	const DEFAULT_MAX_RANK = 5;
+	const DEFAULT_MAX_RANK = 10;
 
 	/* @var int the model ID this widget is rendered for */
 	public $modelId;
@@ -238,6 +238,8 @@ class PcStarRankWidget extends CWidget {
 	 * @param int $user_id voting user id
 	 *
 	 * @return mixed - false for failures and int noting average score when succeeded (note error message logged with explanations).
+	 *
+	 * @throws CException
 	 */
 	private function _rankModel($model_name, $model_id, $rank, $user_id) {
 		/* a little sanity checks: */
@@ -266,8 +268,15 @@ class PcStarRankWidget extends CWidget {
 			$ranking = new Ranking();
 			$ranking->model_name = $this->modelClassName;
 			$ranking->model_id = $this->modelId;
+			try {
 			// no need for validation - model name and id already validated when $this is initialized.
+				// but, race condition can occur that will fail this saving. not a big deal though.
 			$ranking->save(false);
+			}
+			catch (CException $e) {
+				Yii::log("Error: tried to save new Ranking record for model class name={$ranking->model_name}, model id={$ranking->model_id} but exception was thrown. Exception's message: " . $e->getMessage(), CLogger::LEVEL_WARNING, __METHOD__);
+				return false;
+			}
 			$this->_ranking = $ranking;
 			$ranking_fk = $ranking->id;
 		}
@@ -289,13 +298,18 @@ class PcStarRankWidget extends CWidget {
 		try {
 			$trans = Yii::app()->db->beginTransaction();
 
-			// save the rank vote.
+			/*
+			 *  save the rank vote.
+			 */
 			$rank_vote = new RankingVote();
 			$rank_vote->ranking_id = $ranking_fk;
 			$rank_vote->user_id = $user_id;
 			$rank_vote->score_ranked = $rank;
 			$rank_vote->save();
 
+			/*
+			 * Calculate average and save in the Ranking record
+			 */
 			// sum the score ranks total and num of votes
 			$stats = Yii::app()->db->createCommand()
 					->select('sum(score_ranked) as total_score, count(id) as votes_count')
@@ -308,6 +322,24 @@ class PcStarRankWidget extends CWidget {
 			// just for the sake of completeness - god knows where tomorrow in this class we might refer to the average
 			// after it has been saved, assuming its updated in the ranking object as well.
 			$this->_ranking->average_score = $average;
+			/*
+			 * Update the model record itself with the average. This is useful if you need to sort records (of type "class name")
+			 * by rating, for example. This would have been much more cumbersome to do if the average rating was saved only
+			 * in the Ranking record for this model name+id.
+			 * we do this using behavior we have in this module
+			 */
+			// load the model object
+			$model = call_user_func(array($model_name, 'model'));
+			/* @var CActiveRecord $record */
+			$record = $model->findByPk($model_id);
+			if (! $record) {
+				// really really strange... :) should never happen actually
+				Yii::log("Trying to load $model_name with PK=$model_id and failed! Security issue?", CLogger::LEVEL_ERROR, "SECURITY " . __METHOD__);
+				throw new CException("Trying to load $model_name with PK=$model_id and failed! That's really strange and I advise to have a look at this ASAP... .");
+			}
+			// attach our behavior to it
+			$record->attachBehavior('avgRankUpdater', new PcAvgRankUpdaterBehavior);
+			$record->updateAverage($average);
 
 			// all passed - commit the change
 			$trans->commit();

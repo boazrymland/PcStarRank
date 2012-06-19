@@ -19,16 +19,16 @@ $this->widget('CStarRating', array(
 		The hard coded values below are taken from a post on that thread and it suits my needs on a specific project.
 		They will get you going with 5 stars rating, with a resolution of 1/2 star when voting and displaying current vote
 	*/
-	'minRating' => 0.5,
-	'maxRating' => 5,
-	'ratingStepSize' => 0.5,
-	'starCount' => 5,
+	//'minRating' => 0.5,
+	//'maxRating' => 5,
+	//'ratingStepSize' => 0.5,
+	//'starCount' => 5,
 	// I also wasn't able to get titles show up (no matter what I tried in PcStarRankWidget._getDefaultStarsTitles(), for half-stars configuration), hence the comment out below... .
 	//'titles' => $titles,
 	//'ratingStepSize' => "$ratingStepSize",
 	// remove that reset button...
 	'allowEmpty' => false,
-	'value' => $existing_rank,
+	'value' => (int)$existing_rank,
 	// updates the div with the new rating info, displays a message for 5 seconds and makes the //widget readonly
 	'callback' => '
         function(){
