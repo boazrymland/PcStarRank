@@ -7,7 +7,7 @@ CREATE TABLE `rankings` (
   `model_name` varchar(128) NOT NULL,
   `model_id` int(11) unsigned NOT NULL,
   `status` tinyint(2) unsigned NOT NULL DEFAULT '1',
-  `average_score` decimal(2,1) DEFAULT '0.0',
+  `average_score` tinyint(2) NOT NULL,
   `created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_on` timestamp NULL DEFAULT NULL,
   `lock_version` int(11) DEFAULT '0',
@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `ranking_votes`;
 CREATE TABLE `ranking_votes` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(10) unsigned DEFAULT NULL,
-  `score_ranked` decimal(2,1) NOT NULL,
+  `score_ranked` tinyint(2) NOT NULL,
   `ranking_id` int(11) unsigned NOT NULL,
   `created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_on` timestamp NULL DEFAULT NULL,
