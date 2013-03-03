@@ -13,8 +13,8 @@
  * @property integer $lock_version
  *
  * The followings are the available model relations:
- * @property Users $user
- * @property Rankings $ranking
+ * @property User $user
+ * @property Ranking $ranking
  */
 class RankingVote extends PcBaseArModel {
 	/**
@@ -56,8 +56,8 @@ class RankingVote extends PcBaseArModel {
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
-			'ranking' => array(self::BELONGS_TO, 'Rankings', 'ranking_id'),
+			'user' => array(self::BELONGS_TO, 'User', 'user_id'),
+			'ranking' => array(self::BELONGS_TO, 'Ranking', 'ranking_id'),
 		);
 	}
 
@@ -91,5 +91,21 @@ class RankingVote extends PcBaseArModel {
 		return new CActiveDataProvider($this, array(
 			'criteria' => $criteria,
 		));
+	}
+	/**
+	 * @return string
+	 */
+	public static function getCreatorRelationName() {
+		return 'user';
+}
+	/**
+	 * @static
+	 * @param int $id primary key of the model
+	 * @return int - the model creator user id
+	 */
+	public static function getCreatorUserId($id) {
+		/* @var Article $model */
+		$model = self::model()->cache(3600)->with('user_id')->findByPk((int)$id);
+		return $model->user_id;
 	}
 }

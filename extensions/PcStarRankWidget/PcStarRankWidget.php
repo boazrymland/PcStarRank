@@ -210,6 +210,10 @@ class PcStarRankWidget extends CWidget {
 				// @TODO: log, echo json encode error occurred
 			}
 		}
+		else if (Yii::app()->request->isAjaxRequest || Yii::app()->request->isPostRequest) {
+			// some other ajax request. do nothing...
+			return;
+		}
 		else {
 			// render the star rank widget for display
 			$this->controller->renderPartial("application.modules.PcStarRank.extensions.PcStarRankWidget.views.star_rank_widget", array(
@@ -331,7 +335,7 @@ class PcStarRankWidget extends CWidget {
 			// load the model object
 			$model = call_user_func(array($model_name, 'model'));
 			/* @var CActiveRecord $record */
-			$record = $model->findByPk($model_id);
+			$record = $model->findByPk((int)$model_id);
 			if (! $record) {
 				// really really strange... :) should never happen actually
 				Yii::log("Trying to load $model_name with PK=$model_id and failed! Security issue?", CLogger::LEVEL_ERROR, "SECURITY " . __METHOD__);

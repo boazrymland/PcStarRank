@@ -14,7 +14,7 @@
  * @property integer $lock_version
  *
  * The followings are the available model relations:
- * @property RankingVotes[] $rankingVotes
+ * @property RankingVote[] $rankingVotes
  */
 class Ranking extends PcBaseArModel {
 	const STATUS_ENABLED = 1;
@@ -60,7 +60,7 @@ class Ranking extends PcBaseArModel {
 		// NOTE: you may need to adjust the relation name and the related
 		// class name for the relations automatically generated below.
 		return array(
-			'rankingVotes' => array(self::HAS_MANY, 'RankingVotes', 'ranking_id'),
+			'rankingVotes' => array(self::HAS_MANY, 'RankingVote', 'ranking_id'),
 		);
 	}
 
@@ -106,5 +106,22 @@ class Ranking extends PcBaseArModel {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * @return string
+	 */
+	public static function getCreatorRelationName() {
+		return '';
+	}
+
+	/**
+	 * @static
+	 * @param int $id primary key of the model
+	 * @return int - the model creator user id
+	 * @throws CException
+	 */
+	public static function getCreatorUserId($id) {
+		throw new CException("This method should never be called for model of type " . __CLASS__ . " since this class is not related to a user.");
 	}
 }
